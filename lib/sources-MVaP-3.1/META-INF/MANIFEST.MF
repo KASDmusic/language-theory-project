@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Version: 3.1
+Main-Class: CBaP
+Class-Path: "/usr/share/java/*"
