@@ -50,7 +50,7 @@ function help {
 	echo "│   └── grammar"
 	echo "│       ├── AnBn"
 	echo "│       │   ├── AnBnBaseListener.java"
-	echo "│       │   ├── AnBn.g4"
+	echo "│       │	   ├── AnBn.g4"
 	echo "│       │   ├── AnBnLexer.java"
 	echo "│       │   ├── AnBnLexer.tokens"
 	echo "│       │   ├── AnBnListener.java"
