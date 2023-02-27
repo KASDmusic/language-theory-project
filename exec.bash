@@ -2,16 +2,7 @@
 
 #Liste des taches
 
-#Executer code MVaP (avec ou sans traces (2 types de traces)); V
-#Deplacer les fichiers dist de MVaP; V
-
-#Creer grammaire (antlr) et les déplacer dans un dossier portant le nom de la grammaire V
-#Compiler grammaire (antlr) V
-#Utiliser grammaire (antlr) V
-
 #Vérifier les commentaires paramètres des fonctions 
-
-
 
 #Fonction affichant le help
 function help {
@@ -108,7 +99,6 @@ function help {
 # $1 = chemin du fichier contenant le code MVaP (.mvap)
 # $2 = true si trace pour le build
 # $3 = true si trace pour l'execution
-
 function executeMVaP {
 	if [[ "$2" == "true" ]];
 	then
