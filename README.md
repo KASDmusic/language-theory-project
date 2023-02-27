@@ -90,7 +90,7 @@ bash exec.sh antlr test [path_to_grammar_g4_file_with_.class_files] [axiome] ('-
 ```
 
 
-### MVaP :
+### MVàP :
 
 ```bash
 #Execution d'un code MVaP
