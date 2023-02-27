@@ -120,6 +120,9 @@ function executeMVaP {
 	#Prends le nom du fichier sans le chemin
 	fileName=${1##*/}
 
+	mkdir dist 2> /dev/null
+	mkdir dist/cbap 2> /dev/null
+
 	mv $1.cbap dist/cbap
 
 	if [[ "$3" == "true" ]];
@@ -150,6 +153,8 @@ function createGrammar {
 	if [[ "$2" == "-d" ]];
 	then
 		#Créé le dossier de la grammaire
+		mkdir dist 2> /dev/null
+		mkdir dist/grammars 2> /dev/null
 		mkdir dist/grammars/$grammarName 2> /dev/null
 
 		cp $1 dist/grammars/$grammarName
@@ -177,6 +182,8 @@ function compileGrammar {
 	#Compile la grammaire
 	if [[ "$2" == "-d" ]];
 	then
+		mkdir dist 2> /dev/null
+		mkdir dist/class 2> /dev/null
 		mkdir dist/class/$grammarNameWithoutExt 2> /dev/null
 		javac -cp "lib/*" -d dist/class/$grammarName $1/*.java
 		cp $1/$grammarName*.g4 dist/class/$grammarName
