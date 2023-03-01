@@ -2,6 +2,7 @@
 
 #Liste des taches
 
+#Faire les verifications des bons parametres (extensions, etc)
 #Vérifier les commentaires paramètres des fonctions 
 
 #Fonction affichant le help
@@ -163,19 +164,24 @@ function createGrammar {
 # $2 = -d pour déplacer les fichiers dans le dossier de la grammaire
 function compileGrammar {
 
-	#Prends le nom du dossier sans le chemin
-	grammarName=${1##*/}
+	#Prends le chemin et enlever un / à la fin si il y en a un
+	if [[ "$1" != */ ]];
+	then
+		grammarPath=$1
+	else
+		grammarPath=${1%?}
+	fi
 
-	#Prends le nom du fichier sans l'extension et sans le chemin
-	grammarNameWithoutExt=${grammarName%.*}
+	#Prends le nom du dernier repertoire
+	grammarName=${grammarPath##*/}
 
 	#Compile la grammaire
 	if [[ "$2" == "-d" ]];
 	then
 		mkdir dist 2> /dev/null
 		mkdir dist/class 2> /dev/null
-		mkdir dist/class/$grammarNameWithoutExt 2> /dev/null
-		javac -cp "lib/*" -d dist/class/$grammarName $1/*.java
+		mkdir dist/class/$grammarName 2> /dev/null
+		javac -cp "lib/*" -d dist/class/$grammarName/ $1/*.java
 		cp $1/$grammarName*.g4 dist/class/$grammarName
 	else
 		javac -cp ./lib/antlr-4.12.0-complete.jar:./lib/MVaP.jar $1/$grammarName*.java
