@@ -85,6 +85,9 @@ bash exec.sh antlr create [path_to_grammar_g4_file] ('-d')
 #Compilation d'une grammaire
 bash exec.sh antlr compile [path_to_grammar_folder] ('-d')
 
+#Création et compilation d'une grammaire et avec option -d par défaut
+bash exec.sh antlr createCompile [path_to_grammar_g4_file]
+
 #Execution d'une grammaire
 bash exec.sh antlr test [path_to_grammar_g4_file_with_.class_files] [axiome] ('-gui')
 ```
