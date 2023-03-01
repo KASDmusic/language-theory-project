@@ -96,6 +96,9 @@ bash exec.sh antlr test [path_to_grammar_g4_file_with_.class_files] [axiome] ('-
 ### MVàP :
 
 ```bash
-#Execution d'un code MVaP
+#Execution d'un code MVaP avec debugage pour la compilation et l'execution
 bash exec.sh mvap execute [path_to_mvap_file] ('true') ('true')
+
+#Execution d'un code MVaP avec debugage pour l'execution
+bash exec.sh mvap execute [path_to_mvap_file] (.+) ('true')
 ```
