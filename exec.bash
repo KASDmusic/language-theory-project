@@ -210,6 +210,20 @@ function testGrammar {
 	fi
 }
 
+#Fonction permettant de créer et compiler une grammaire
+#parametre :
+# $1 = chemin du fichier contenant la grammaire (.g4)
+function createCompileGrammar {
+	createGrammar $1 -d
+	
+	#Prends le nom du fichier sans l'extension et sans le chemin
+	grammarName=${1##*/}
+	grammarName=${grammarName%.*}
+	echo $grammarName
+
+	compileGrammar dist/grammars/$grammarName -d
+}
+
 #Main
 
 isCorrectCommand="false"
@@ -240,6 +254,12 @@ then
 	if [[ "$2" == "compile" ]] && [ "$#" -ge 3 ]
 	then
 		compileGrammar $3 $4
+		isCorrectCommand="true"
+	fi
+
+	if [[ "$2" == "createCompile" ]] && [ "$#" -ge 3 ]
+	then
+		createCompileGrammar $3
 		isCorrectCommand="true"
 	fi
 
