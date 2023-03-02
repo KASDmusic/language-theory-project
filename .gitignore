@@ -2,6 +2,9 @@
 *.class
 dist/
 
+#Tout les fichiers .antlr contenu dans src/nom_du_projet
+src/*/.antlr/
+
 # Log file
 *.log
 
