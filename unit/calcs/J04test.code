@@ -1,0 +1,12 @@
+int nb
+int d
+nb = 42
+d = 0
+
+while (nb > 0) {
+    nb = nb/2
+    d += 1
+}
+
+print(d)
+

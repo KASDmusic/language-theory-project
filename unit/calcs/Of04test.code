@@ -1,0 +1,8 @@
+double x=0.0
+double g(double x) {
+	 return x+40.
+}
+print(x)
+x=x+g(2.)
+print(x)
+

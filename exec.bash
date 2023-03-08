@@ -134,8 +134,6 @@ function executeMVaP {
 # $1 = fichier .g4 de la grammaire
 # $2 = -d pour déplacer les fichiers dans le dossier de la grammaire
 function createGrammar {
-	#Créé la grammaire
-	java -cp "lib/*" org.antlr.v4.Tool $1
 
 	#Prends le nom du fichier sans l'extension et sans le chemin
 	grammarName=${1##*/}
@@ -143,6 +141,17 @@ function createGrammar {
 
 	#Prends le chemin du fichier sans le nom du fichier
 	grammarPath=${1%/*}
+
+	#Si il y a -d, copie tout les fichier du dossier de la grammaire dans un dossier temporaire
+	if [[ "$2" == "-d" ]];
+	then
+		mkdir $grammarPath/temp 2> /dev/null
+		
+		cp $grammarPath/*.* $grammarPath/temp
+	fi
+
+	#Créé la grammaire
+	java -cp "lib/*" org.antlr.v4.Tool $1
 
 	#Si il y a -d :
 	#liste tout les fichier commençant par le nom de la grammaire et ne finissant pas par .g4 et les déplace dans le dossier de la grammaire
@@ -153,13 +162,10 @@ function createGrammar {
 		mkdir dist/grammars 2> /dev/null
 		mkdir dist/grammars/$grammarName 2> /dev/null
 
-		cp $1 dist/grammars/$grammarName
-		for file in $grammarPath/$grammarName*; do
-			if [[ "$file" != *".g4" ]];
-			then
-				mv $file dist/grammars/$grammarName
-			fi
-		done
+		#Déplace les fichiers
+		mv $grammarPath/*.* dist/grammars/$grammarName
+		mv $grammarPath/temp/* $grammarPath
+		rmdir $grammarPath/temp
 	fi
 }
 
@@ -186,10 +192,11 @@ function compileGrammar {
 		mkdir dist 2> /dev/null
 		mkdir dist/class 2> /dev/null
 		mkdir dist/class/$grammarName 2> /dev/null
+
 		javac -cp "lib/*" -d dist/class/$grammarName/ $1/*.java
 		cp $1/$grammarName*.g4 dist/class/$grammarName
 	else
-		javac -cp ./lib/antlr-4.12.0-complete.jar:./lib/MVaP.jar $1/$grammarName*.java
+		javac -cp "lib/*" $1/$grammarName*.java
 	fi
 }
 

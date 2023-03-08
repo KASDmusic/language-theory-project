@@ -1,0 +1,36 @@
+int x
+double f
+bool b
+
+b = false
+x = (int) b
+f = (double) b
+print(b)
+print(x)
+print(f)
+
+b = true
+x = (int) b
+f = (double) b
+print(b) 
+print(x) 
+print(f)
+
+f = 42.
+x = (int) f
+b = (bool) f
+print(f) 
+print(x) 
+# Le comportement en écriture d'une variable booléenne intialisée autrement que par true et false n'est pas normé
+# On insiste juste pour que le cast d'une expression en tant que  booléen se comporte comme false ssi l'expression vaut 0 (int) ou 0. (double) 
+if ( b ) print(1) 
+else print(0)
+
+f = 0.
+x = (int) f
+b = (bool) f
+print(f)
+print(x) 
+# Le comportement en écriture d'une variable booléenne intialisée autrement que par true et false n'est pas normé
+if ( ! b ) print(0) 
+else print(1) 

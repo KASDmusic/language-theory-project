@@ -2,7 +2,7 @@ grammar CalcToMvap;
 
 @parser::members {
 
-    //private TablesSymboles tablesSymboles = new TablesSymboles();
+    private TablesSymboles tablesSymboles = new TablesSymboles();
 
     private String evalOperation (String op) {
         switch (op) {
@@ -17,24 +17,27 @@ grammar CalcToMvap;
     }
 }
 
+start : calcul EOF ;
+
 calcul returns [ String code ]
 @init{ $code = new String(); }   // On initialise code, pour l'utiliser comme accumulateur 
 @after{ System.out.println($code); } // On affiche l’ensemble du code produit
 
-    :   /*(decl { $code += $decl.code; })**/
-        NEWLINE*
+    : (decl { $code += $decl.code; })*
+      NEWLINE*
 
-        (instruction { $code += $instruction.code; })*
+      (instruction { $code += $instruction.code; })*
 
-        { $code += "HALT\n"; }
+      { $code += "HALT\n"; }
     ;
 
 instruction returns [ String code ] 
-    : /*assignation finInstruction
+    : ioDeclaration { $code = $ioDeclaration.code; }
+    | assignation finInstruction
         {
             $code = $assignation.code;
         }
-    |*/ expression finInstruction 
+    | expression finInstruction 
         { 
             $code = $expression.code;
         }
@@ -50,23 +53,47 @@ expression returns [ String code ]
     | left=expression op=('*'|'/') right=expression { $code = $left.code + $right.code + evalOperation($op.text) + "\n"; }
     | left=expression op=('+'|'-') right=expression { $code = $left.code + $right.code + evalOperation($op.text) + "\n"; }
     | ENTIER { $code = "PUSHI "+$ENTIER.text+"\n"; }
+    | IDENTIFIANT { $code = "PUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; }
     ;
 
-/*
 decl returns [ String code ]
     : TYPE IDENTIFIANT finInstruction
         {
-            // à compléter
+            tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
+            $code = "PUSHI 0\n";
+        }
+    | TYPE IDENTIFIANT '=' expression finInstruction
+        {
+            tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
+            $code = $expression.code;
         }
     ;
 
 assignation returns [ String code ] 
     : IDENTIFIANT '=' expression
-        {  
-            // à compléter
+        {
+            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+            $code = $expression.code;
+            $code += "STOREG " + vi.address + "\n";
         }
     ;
-*/
+
+ioDeclaration returns [ String code ]
+    : 'input' '(' IDENTIFIANT ')' finInstruction
+        {
+            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+            $code = "READ \n";
+            $code += "STOREG " + vi.address + "\n";
+        }
+    | 'print' '(' IDENTIFIANT ')' finInstruction
+        {
+            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+            $code = "PUSHG " + vi.address + "\n";
+            $code += "WRITE \n";
+            $code += "POP \n";
+        }
+    ;
+
 
 // lexer
 TYPE : 'int' | 'double' ;

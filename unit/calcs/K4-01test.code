@@ -1,0 +1,14 @@
+int x
+
+int f (int y) {
+  int z=2
+
+  while (z < y ) {
+    z = z * z
+  }
+
+  return z
+}
+
+print(f(72))
+

@@ -1,0 +1,8 @@
+double i = 1.3
+double k
+int j= 2
+
+input(k)
+print(j-1)
+print(i)
+print(k)

@@ -1,0 +1,19 @@
+int i
+int p
+double r
+
+double babylon (double s, int prec) {
+      r=s/2.
+      for(i=1; i < prec; i=i+1) {
+               print(r)
+               r=(r+s/r)/2.
+      }
+      return r
+}
+
+p=10
+
+print(babylon(25.,p))
+
+print(babylon(2.,p))
+

@@ -1,0 +1,4 @@
+int i
+input(i)
+if ( i<10 && i<100 || i>5) print(i+1)
+print(0)

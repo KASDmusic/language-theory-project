@@ -1,0 +1,8 @@
+int x
+int y = 0 
+int z = 1
+int t = 2
+input(x)
+if (x == 0)  print(y)
+else if (x == 1)  print(z)
+     else  print(t)

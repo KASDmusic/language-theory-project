@@ -1,0 +1,13 @@
+double z
+double g(double x) {
+  return x*2.
+}
+double f(double i, double j) {
+  print(i) 
+  print(j) 
+  while (i < j+1.) i = g(j)
+  print(i) 
+  return i
+}
+z=f(3., 5.)
+print(z)

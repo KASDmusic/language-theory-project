@@ -1,0 +1,3 @@
+double y
+input(y)
+print(5.3 * y + 2.)

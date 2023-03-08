@@ -1,0 +1,17 @@
+int x = 1
+int y = 3
+if (x==1) x=x+1
+if (x==3) x=4 
+	else print(x)
+x=1
+if (x==1) { x=x+1
+	if (x==3) x=4
+	} 
+else print(x)
+x=1
+if (x==1) {if (y!=3) print(y) 
+		else y=2*y
+	} 
+	else y=4
+print(y) 
+

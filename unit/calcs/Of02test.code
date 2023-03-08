@@ -1,0 +1,7 @@
+double x
+double f() {
+  return 40.
+}
+x=f()+2.
+print(x)
+

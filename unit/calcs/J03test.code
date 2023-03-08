@@ -1,0 +1,11 @@
+int i
+int xi
+
+while (i > 42) {
+    xi = xi+i
+    i = i+1
+}
+
+
+print(xi)
+

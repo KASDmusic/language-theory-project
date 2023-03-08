@@ -1,0 +1,7 @@
+int i=0
+int x=42
+while (i < 5){
+      print(i)
+      print(x)
+      i=i+1
+}

@@ -1,0 +1,13 @@
+int x
+int y = 42
+int z = 54
+input(x)
+print(x)
+x=10
+input(z)
+print(y) 
+y=x+1
+print(y)
+x=2*y+20
+print(x)
+

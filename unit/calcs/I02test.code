@@ -1,0 +1,16 @@
+int u = 1
+int z = 42
+if (z < u) print(u)  
+   else print(z)
+if (u >= z) print(u)
+   else print(z)
+if (u-1 == z) print(u)
+   else print(z)
+if (false || z > u)  print(z)
+   else print(u)
+if (true  &&  z > u)  print(z)
+   else print(u)
+if (! true) print(z)
+if (false || ! false  &&  true) print(u) 
+	else print(z)
+
