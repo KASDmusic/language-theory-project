@@ -1,9 +1,13 @@
 #!/bin/bash
 
+#AUTHOR : Kenzo LECOINDRE
+
 #Liste des taches
 
 #Faire les verifications des bons parametres (extensions, etc)
 #Vérifier les commentaires paramètres des fonctions 
+
+#bash unit/AutoCor.sh src/CalcToMvap/CalcToMvap.g4 src/CalcToMvap/TableSimple.java src/CalcToMvap/TablesSymboles.java src/CalcToMvap/VariableInfo.java
 
 #Fonction affichant le help
 function help {

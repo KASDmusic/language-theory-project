@@ -33,18 +33,9 @@ calcul returns [ String code ]
 
 instruction returns [ String code ] 
     : ioDeclaration { $code = $ioDeclaration.code; }
-    | assignation finInstruction
-        {
-            $code = $assignation.code;
-        }
-    | expression finInstruction 
-        { 
-            $code = $expression.code;
-        }
-   | finInstruction
-        {
-            $code="";
-        }
+    | assignation finInstruction { $code = $assignation.code; }
+    | expression finInstruction { $code = $expression.code; }
+    | finInstruction { $code=""; }
     ;
 
 expression returns [ String code ]
@@ -76,6 +67,14 @@ assignation returns [ String code ]
             $code = $expression.code;
             $code += "STOREG " + vi.address + "\n";
         }
+    | IDENTIFIANT op=('+'|'-'|'*'|'/') '=' expression
+        {
+            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+            $code = "PUSHG " + vi.address + "\n";
+            $code += $expression.code;
+            $code += evalOperation($op.text) + "\n";
+            $code += "STOREG " + vi.address + "\n";
+        }
     ;
 
 ioDeclaration returns [ String code ]
@@ -91,6 +90,13 @@ ioDeclaration returns [ String code ]
             $code += "WRITE \n";
             $code += "POP \n";
         }
+    ;
+
+bloc returns [ String code ]  @init{ $code = new String(); } 
+    : '{' 
+        (instruction { $code += $instruction.code; })*  
+      '}'  
+      NEWLINE*
     ;
 
 
