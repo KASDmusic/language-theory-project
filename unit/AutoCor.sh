@@ -1,7 +1,11 @@
 #! /bin/sh
 
+unset _JAVA_OPTIONS
+
 # prefixe (répertoire de travail)
-PREF_COR="."
+PREF_COR="unit"
+# Destination des fichiers temporaires
+TMP_FOLDER="dist/tmp"
 # rep qui contient les benchs calculette.
 CALC_FOLDER=calcs
 # rep qui contient les traces attendues
@@ -53,11 +57,12 @@ then
 fi
        	
 
-
+echo "path : $(pwd)"
 # Make a tmp dir and put the file here
-tmpdir="Compil-"`date +%m-%d-%H:%M`
+tmpdir="Compil-"`date +%m-%d-%H:%M:%S`
 mkdir $tmpdir
 cp $* $tmpdir
+cp -r unit/ $tmpdir
 cd $tmpdir
 
 
@@ -80,7 +85,7 @@ fi
 
 # Tests
 note=0
-
+echo $(pwd)
 for i in `ls $PREF_COR/$CALC_FOLDER/*.code`
 do
     t_name=`basename "$i" ".code"`

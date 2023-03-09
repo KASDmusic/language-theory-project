@@ -85,10 +85,9 @@ ioDeclaration returns [ String code ]
             $code = "READ \n";
             $code += "STOREG " + vi.address + "\n";
         }
-    | 'print' '(' IDENTIFIANT ')' finInstruction
+    | 'print' '(' expression ')' finInstruction
         {
-            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
-            $code = "PUSHG " + vi.address + "\n";
+            $code = $expression.code;
             $code += "WRITE \n";
             $code += "POP \n";
         }
@@ -103,7 +102,7 @@ IDENTIFIANT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9')* ;
 //Commentaires mono-ligne avec '%' et multi-ligne avec '/*' et '*/'
 COMMENT : ('/*'.*?'*/'|'%'.*?'\n') -> skip ;
 
-NEWLINE : '\r'? '\n'  -> skip;
+NEWLINE : '\r'? '\n';
 
 WS :   (' '|'\t')+ -> skip  ;
 
