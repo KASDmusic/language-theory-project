@@ -14,9 +14,9 @@ WRITES_FOLDER=writes
 READS_FOLDER=reads
 
 # mon chemin antlr
-ANTLR_JAR="../lib/antlr-4.12.0-complete.jar"
+ANTLR_JAR="../../../lib/antlr-4.12.0-complete.jar"
 # mon chemain MVàP
-MVAP_JAR="../lib/MVaP.jar"
+MVAP_JAR="../../../lib/MVaP.jar"
 # point d'entrée de la grammaire.
 ENTRY=start
 
@@ -59,11 +59,14 @@ fi
 
 echo "path : $(pwd)"
 # Make a tmp dir and put the file here
+mkdir dist 2> /dev/null
+mkdir dist/Compil 2> /dev/null
+
 tmpdir="Compil-"`date +%m-%d-%H:%M:%S`
-mkdir $tmpdir
-cp $* $tmpdir
-cp -r unit/ $tmpdir
-cd $tmpdir
+mkdir dist/Compil/$tmpdir
+cp $* dist/Compil/$tmpdir
+cp -r unit/ dist/Compil/$tmpdir
+cd dist/Compil/$tmpdir
 
 
 # Compile g4

@@ -7,8 +7,6 @@
 #Faire les verifications des bons parametres (extensions, etc)
 #Vérifier les commentaires paramètres des fonctions 
 
-#bash unit/AutoCor.sh src/CalcToMvap/CalcToMvap.g4 src/CalcToMvap/TableSimple.java src/CalcToMvap/TablesSymboles.java src/CalcToMvap/VariableInfo.java
-
 #Fonction affichant le help
 function help {
 	echo ""
@@ -216,13 +214,15 @@ function testGrammar {
 
 	#Prends le nom du fichier sans l'extension et sans le chemin
 	grammarName=${1##*/}
-	grammarName=${grammarName%.*}
+	grammarName=${grammarName%.*}	
+
+	classpath="dist/class/$grammarName"
 
 	if [[ "$3" == "-gui" ]];
 	then
-		java -cp "$grammarPath:lib/*" org.antlr.v4.runtime.misc.TestRig $grammarName "$2" $3
+		java -cp "$classpath:lib/*" org.antlr.v4.runtime.misc.TestRig $grammarName "$2" $3
 	else
-		java -cp "$grammarPath:lib/*" org.antlr.v4.runtime.misc.TestRig $grammarName "$2"
+		java -cp "$classpath:lib/*" org.antlr.v4.runtime.misc.TestRig $grammarName "$2"
 	fi
 }
 
@@ -235,60 +235,93 @@ function createCompileGrammar {
 	#Prends le nom du fichier sans l'extension et sans le chemin
 	grammarName=${1##*/}
 	grammarName=${grammarName%.*}
-	echo $grammarName
 
 	compileGrammar dist/grammars/$grammarName -d
 }
 
+#Fonction permettant de créer et compiler une grammaire
+#parametre :
+# $1 = chemin du fichier contenant la grammaire (.g4)
+# $2 = axiome de départ
+# $3 = -gui pour l'interface graphique
+function createCompileTestGrammar {
+	createCompileGrammar $1
+	testGrammar $1 $2 $3
+}
+
+#Fonction permettant de lancer les tests unitaires
+#Cette fonction prend en parametre le chemin du fichier contenant la grammaire (.g4)
+#et copie tout les fichiers du dossier de la grammaire dans un dossier temporaire
+#puis lance les tests unitaires
+#parametre :
+# $1 = chemin du fichier contenant la grammaire (.g4)
+function unitTest {
+	#https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+
+	#Prends le chemin du fichier sans le nom du fichier
+	grammarPath=${1%/*}
+	echo $grammarPath
+	
+	bash unit/AutoCor.sh $1 $grammarPath/*
+	
+}
+
+
 #Main
 
-isCorrectCommand="false"
-
-if [[ "$1" == "--help" ]] || [[ "$1" == "-help" ]]
+if [[ "$1" == "--help" ]] || [[ "$1" == "-help" ]];
 then
 	help
-	isCorrectCommand="true"
-fi
 
-if [[ "$1" == "mvap" ]]
+elif [[ "$1" == "mvap" ]];
 then
-	if [[ "$2" == "execute" ]] && [ "$#" -eq 5 ]
+	if [[ "$2" == "execute" ]] && [ "$#" -eq 5 ];
 	then
 		executeMVaP $3 $4 $5
-		isCorrectCommand="true"
 	fi
-fi
 
-if [[ "$1" == "antlr" ]]
+elif [[ "$1" == "antlr" ]];
 then
-	if [[ "$2" == "create" ]] && [ "$#" -ge 3 ]
+	if [[ "$2" == "create" ]] && [ "$#" -ge 3 ];
 	then
 		createGrammar $3 $4
-		isCorrectCommand="true"
-	fi
 
-	if [[ "$2" == "compile" ]] && [ "$#" -ge 3 ]
+	elif [[ "$2" == "compile" ]] && [ "$#" -ge 3 ]
 	then
 		compileGrammar $3 $4
-		isCorrectCommand="true"
-	fi
 
-	if [[ "$2" == "createCompile" ]] && [ "$#" -ge 3 ]
+	elif [[ "$2" == "createCompile" ]] && [ "$#" -ge 3 ]
 	then
 		createCompileGrammar $3
-		isCorrectCommand="true"
-	fi
 
-	if [[ "$2" == "test" ]] && [ "$#" -ge 4 ]
+	elif [[ "$2" == "createCompileTest" ]] && [ "$#" -ge 4 ]
+	then
+		createCompileTestGrammar $3 $4 $5
+
+	elif [[ "$2" == "test" ]] && [ "$#" -ge 4 ]
 	then
 		testGrammar $3 $4 $5
-		isCorrectCommand="true"
+	
+	else
+		echo "Incorrect command : (--help to learn how to use the script)"
 	fi
-fi
-		
 
-if [[ "$isCorrectCommand" == "false" ]]
+elif [[ "$1" == "unit" ]];
 then
+	if [[ "$2" == "test" ]] && [ "$#" -ge 3 ];
+	then
+		#prends les arguments à partir du 3eme
+		shift 2
+		unitTest $@
+	
+	elif [[ "$2" == "clear" ]];
+	then
+		rm -rf dist/Compil/*
+	
+	else
+		echo "Incorrect command : (--help to learn how to use the script)"
+	fi
+else
 	echo "Incorrect command : (--help to learn how to use the script)"
 fi
 

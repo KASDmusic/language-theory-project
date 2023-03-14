@@ -1,7 +1,9 @@
 # Compiled class file
 *.class
 dist/
-Compil*
+
+# Log file
+*.mvap
 
 #Tout les fichiers .antlr contenu dans src/nom_du_projet
 src/*/.antlr/
