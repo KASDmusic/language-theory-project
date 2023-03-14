@@ -4,66 +4,158 @@ A language theory project which convert mathematical expressions into an "assemb
 ## Arborescence d'exemple de structure :
 
 ```
- .
- ├── dist
- │   ├── cbap
- │   │   └── add.mvap.cbap
- │   ├── class
- │   │   ├── AnBn
- │   │   │   ├── AnBnBaseListener.class
- │   │   │   ├── AnBn.g4
- │   │   │   ├── AnBnLexer.class
- │   │   │   ├── AnBnListener.class
- │   │   │   ├── AnBnParser\$AnbnContext.class
- │   │   │   ├── AnBnParser\$FileContext.class
- │   │   │   └── AnBnParser.class
- │   │   └── MVaP
- │   │       ├── MVaPAssembler.class
- │   │       ├── MVaPAssemblerListener.class
- │   │       ├── MVaPBaseListener.class
- │   │       ├── MVaPLexer.class
- │   │       ├── MVaPListener.class
- │   │       ├── MVaPParser\$Commande1Context.class
- │   │       ├── MVaPParser\$Commande2Context.class
- │   │       ├── MVaPParser\$CommandeSautContext.class
- │   │       ├── MVaPParser\$Instr1Context.class
- │   │       ├── MVaPParser\$Instr2Context.class
- │   │       ├── MVaPParser\$Instr2fContext.class
- │   │       ├── MVaPParser\$InstrContext.class
- │   │       ├── MVaPParser\$LabelContext.class
- │   │       ├── MVaPParser\$ProgramContext.class
- │   │       ├── MVaPParser\$SautContext.class
- │   │       └── MVaPParser.class
- │   └── grammar
- │       ├── AnBn
- │       │   ├── AnBnBaseListener.java
- │       │   ├── AnBn.g4
- │       │   ├── AnBnLexer.java
- │       │   ├── AnBnLexer.tokens
- │       │   ├── AnBnListener.java
- │       │   ├── AnBnParser.java
- │       │   └── AnBn.tokens
- │       └── MVaP
- │           ├── MVaPAssembler.class
- │           ├── MVaPAssembler.java
- │           ├── MVaPAssemblerListener.java
- │           ├── MVaPBaseListener.java
- │           ├── MVaPLexer.java
- │           ├── MVaPLexer.tokens
- │           ├── MVaPListener.java
- │           ├── MVaPParser.java
- │           └── MVaP.tokens
- ├── lib
- │   ├── antlr-4.7.1-complete.jar
- │   └── MVaP.jar
- ├── README.md
- └── src
-     ├── AnBn
-     │   └── AnBn.g4
-     └── MVaP
-         └── MVaP.g4
-```	 
-	
+.
+├── dist
+│   ├── cbap
+│   │   ├── 3n+2.mvap.cbap
+│   │   ├── add.mvap.cbap
+│   │   └── test.mvap.cbap
+│   ├── class
+│   │   ├── CalcToMvap
+│   │   │   ├── CalcToMvapBaseListener.class
+│   │   │   ├── CalcToMvap.g4
+│   │   │   ├── CalcToMvapLexer.class
+│   │   │   ├── CalcToMvapListener.class
+│   │   │   ├── CalcToMvapParser$AssignationContext.class
+│   │   │   ├── CalcToMvapParser$BlocContext.class
+│   │   │   ├── CalcToMvapParser$BoucleContext.class
+│   │   │   ├── CalcToMvapParser$BoucleWhileContext.class
+│   │   │   ├── CalcToMvapParser$CalculContext.class
+│   │   │   ├── CalcToMvapParser$ConditionContext.class
+│   │   │   ├── CalcToMvapParser$ConditionIfContext.class
+│   │   │   ├── CalcToMvapParser$DeclContext.class
+│   │   │   ├── CalcToMvapParser$ExpressionContext.class
+│   │   │   ├── CalcToMvapParser$ExpressionLogiqueContext.class
+│   │   │   ├── CalcToMvapParser$FinInstructionContext.class
+│   │   │   ├── CalcToMvapParser$InstructionContext.class
+│   │   │   ├── CalcToMvapParser$IoDeclarationContext.class
+│   │   │   ├── CalcToMvapParser$StartContext.class
+│   │   │   ├── CalcToMvapParser.class
+│   │   │   ├── TableSimple.class
+│   │   │   ├── TablesSymboles.class
+│   │   │   ├── VariableInfo$Scope.class
+│   │   │   └── VariableInfo.class
+│   ├── Compil
+│   │   └── Compil-03-14-14:51:32
+│   │       ├── CalcToMvapBaseListener.class
+│   │       ├── CalcToMvapBaseListener.java
+│   │       ├── CalcToMvap.g4
+│   │       ├── CalcToMvap.interp
+│   │       ├── CalcToMvapLexer.class
+│   │       ├── CalcToMvapLexer.interp
+│   │       ├── CalcToMvapLexer.java
+│   │       ├── CalcToMvapLexer.tokens
+│   │       ├── CalcToMvapListener.class
+│   │       ├── CalcToMvapListener.java
+│   │       ├── CalcToMvapParser$AssignationContext.class
+│   │       ├── CalcToMvapParser$BlocContext.class
+│   │       ├── CalcToMvapParser$BoucleContext.class
+│   │       ├── CalcToMvapParser$CalculContext.class
+│   │       ├── CalcToMvapParser$ConditionContext.class
+│   │       ├── CalcToMvapParser$ConditionIfContext.class
+│   │       ├── CalcToMvapParser$DeclContext.class
+│   │       ├── CalcToMvapParser$ExpressionContext.class
+│   │       ├── CalcToMvapParser$ExpressionLogiqueContext.class
+│   │       ├── CalcToMvapParser$FinInstructionContext.class
+│   │       ├── CalcToMvapParser$InstructionContext.class
+│   │       ├── CalcToMvapParser$IoDeclarationContext.class
+│   │       ├── CalcToMvapParser$StartContext.class
+│   │       ├── CalcToMvapParser.class
+│   │       ├── CalcToMvapParser.java
+│   │       ├── CalcToMvap.tokens
+│   │       ├── D00test.ass.log
+│   │       ├── D00test.comp.log
+│   │       ├── D00test.mvap
+│   │       ├── D00test.mvap.cbap
+│   │       ├── D00test.res
+│   │       ├── D00test.run.log
+│   │       ├── D01test.ass.log
+│   │       ├── D01test.comp.log
+│   │       ├── D01test.mvap
+│   │       ├── D01test.mvap.cbap
+│   │       ├── D01test.res.read0
+│   │       ├── D01test.res.read1
+│   │       ├── D01test.run.log.read0
+│   │       ├── D01test.run.log.read1
+│   │       ├── TableSimple.class
+│   │       ├── TableSimple.java
+│   │       ├── TablesSymboles.class
+│   │       ├── TablesSymboles.java
+│   │       ├── unit
+│   │       │   ├── AutoCor.sh
+│   │       │   ├── calcs
+│   │       │   │   ├── D00test.code
+│   │       │   │   └── D01test.code
+│   │       │   ├── reads
+│   │       │   │   ├── D01test.read0
+│   │       │   │   └── D01test.read1
+│   │       │   └── writes
+│   │       │       ├── D00test.res
+│   │       │       ├── D01test.res.read0
+│   │       │       └── D01test.res.read1
+│   │       ├── VariableInfo$Scope.class
+│   │       ├── VariableInfo.class
+│   │       └── VariableInfo.java
+│   └── grammars
+│       ├── CalcToMvap
+│       │   ├── CalcToMvapBaseListener.class
+│       │   ├── CalcToMvapBaseListener.java
+│       │   ├── CalcToMvap.g4
+│       │   ├── CalcToMvap.interp
+│       │   ├── CalcToMvapLexer.class
+│       │   ├── CalcToMvapLexer.interp
+│       │   ├── CalcToMvapLexer.java
+│       │   ├── CalcToMvapLexer.tokens
+│       │   ├── CalcToMvapListener.class
+│       │   ├── CalcToMvapListener.java
+│       │   ├── CalcToMvapParser$AssignationContext.class
+│       │   ├── CalcToMvapParser$BlocContext.class
+│       │   ├── CalcToMvapParser$BoucleWhileContext.class
+│       │   ├── CalcToMvapParser$CalculContext.class
+│       │   ├── CalcToMvapParser$ConditionContext.class
+│       │   ├── CalcToMvapParser$DeclContext.class
+│       │   ├── CalcToMvapParser$ExpressionContext.class
+│       │   ├── CalcToMvapParser$FinInstructionContext.class
+│       │   ├── CalcToMvapParser$InstructionContext.class
+│       │   ├── CalcToMvapParser$IoDeclarationContext.class
+│       │   ├── CalcToMvapParser$StartContext.class
+│       │   ├── CalcToMvapParser.class
+│       │   ├── CalcToMvapParser.java
+│       │   ├── CalcToMvap.tokens
+│       │   ├── TableSimple.class
+│       │   ├── TableSimple.java
+│       │   ├── TablesSymboles.class
+│       │   ├── TablesSymboles.java
+│       │   ├── VariableInfo$Scope.class
+│       │   ├── VariableInfo.class
+│       │   └── VariableInfo.java
+├── exec.bash
+├── lib
+│   ├── antlr-4.12.0-complete.jar
+│   ├── MVaP.jar
+│   └── sources-MVaP-3.1
+├── README.md
+├── src
+│   ├── CalcToMvap
+│   │   ├── CalcToMvap.g4
+│   │   ├── TableSimple.java
+│   │   ├── TablesSymboles.java
+│   │   └── VariableInfo.java
+├── tempExec.sh
+└── unit
+    ├── AutoCor.sh
+    ├── calcs
+    │   ├── D00test.code
+    │   └── D01test.code
+    ├── reads
+    │   ├── D01test.read0
+    │   └── D01test.read1
+    ├── script.py
+    └── writes
+        ├── D00test.res
+        ├── D01test.res.read0
+        └── D01test.res.read1
+```
   
 ## Commandes :
 
