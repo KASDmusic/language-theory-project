@@ -79,7 +79,7 @@ then
 fi
 
 /bin/echo -e "\e[34mJavac\e[39m"
-if ! javac -cp "$ANTLR_JAR" *.java 
+if ! javac -encoding utf8 -cp "$ANTLR_JAR" *.java 
 then	
 	/bin/echo -e "\e[31mErreur java\e[39m"
        	exit 3 

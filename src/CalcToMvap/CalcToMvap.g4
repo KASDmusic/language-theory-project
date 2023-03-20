@@ -8,12 +8,24 @@ grammar CalcToMvap;
 
     private TablesSymboles tablesSymboles = new TablesSymboles();
 
-    private String evalOperation (String op) {
+    private String evalOperation (String op, String type) 
+    {
+        String res = "\t";
+        if(type.equals("double"))
+            res+="F";
+
         switch (op) {
-            case "*": return "\tMUL";
-            case "/": return "\tDIV";
-            case "+": return "\tADD";
-            case "-": return "\tSUB";
+            case "*": return res + "MUL";
+            case "/": return res + "DIV";
+            case "+": return res + "ADD"; 
+            case "-": return res + "SUB";
+
+            case "==": return res + "EQUAL";
+            case "!=": return res + "NEQ";
+            case "<" : return res + "INF";
+            case "<=": return res + "INFEQ";
+            case ">" : return res + "SUP";
+            case ">=": return res + "SUPEQ";
         }
         
         System.err.println("Opérateur arithmétique incorrect : '"+op+"'");
@@ -27,7 +39,7 @@ calcul returns [ String code ]
 @init{ $code = new String(); }   // On initialise code, pour l'utiliser comme accumulateur 
 @after{ System.out.println($code); } // On affiche l’ensemble du code produit
 
-    : (decl { $code += $decl.code; })*
+    : (decl { $code += $decl.code; } finInstruction)*
       NEWLINE*
       {
         $code += "\tJUMP " + "Start" + "\n";
@@ -39,50 +51,153 @@ calcul returns [ String code ]
       { $code += "\tHALT\n"; }
     ;
 
-instruction returns [ String code ] 
+instruction returns [ String code ]
     : ioDeclaration { $code = $ioDeclaration.code; }
     | boucle { $code = $boucle.code; }
     | conditionIf { $code = $conditionIf.code; }
     | assignation finInstruction { $code = $assignation.code; }
     | expression finInstruction { $code = $expression.code; }
-    | finInstruction { $code=""; }
     ;
 
-expression returns [ String code ]
-    : '-' expression { $code = $expression.code + "\tPUSHI -1\nMUL\n"; }
-    | '(' expression ')' { $code = $expression.code; }
-    | left=expression op=('*'|'/') right=expression { $code = $left.code + $right.code + evalOperation($op.text) + "\n"; }
-    | left=expression op=('+'|'-') right=expression { $code = $left.code + $right.code + evalOperation($op.text) + "\n"; }
-    | ENTIER { $code = "\tPUSHI "+ $ENTIER.text+"\n"; }
-    | IDENTIFIANT { $code = "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; }
+expression returns [ String code, String type ]
+    : '-' expression 
+        { 
+            $code = $expression.code;
+            
+            if($expression.type.equals("int"))
+                $code += "\tPUSHI -1\n"; 
+            else
+                $code += "\tPUSHF -1.\n";
+
+            $code += evalOperation("*", $expression.type) + "\n";
+            
+            $type = $expression.type;
+        }
+    | '(' expression ')' 
+        { 
+            $code = $expression.code;
+            $type = $expression.type;
+        }
+    | left=expression op=('*'|'/') right=expression 
+        { 
+            if($left.type.equals($right.type))
+            {
+                $type = $left.type;
+                $code = $left.code + $right.code;
+            }
+            else
+            {
+                $type = "double";
+                if($left.type.equals("int"))
+                {
+                    $code = $left.code + "\tITOF\n" + $right.code;
+                }
+                else
+                {
+                    $code = $left.code + $right.code + "\tITOF\n";
+                }   
+            }  
+
+            $code += evalOperation($op.text, $type) + "\n"; 
+        }
+    | left=expression op=('+'|'-') right=expression 
+        { 
+            if($left.type.equals($right.type))
+            {
+                $type = $left.type;
+                $code = $left.code + $right.code;
+            }
+            else
+            {
+                $type = "double";
+                if($left.type.equals("int"))
+                {
+                    $code = $left.code + "\tITOF\n" + $right.code;
+                }
+                else
+                {
+                    $code = $left.code + $right.code + "\tITOF\n";
+                }   
+            }  
+
+            $code += evalOperation($op.text, $type) + "\n"; 
+        }
+    | ENTIER 
+        { 
+            $type = "int";
+            $code = "\tPUSHI "+ $ENTIER.text+"\n"; 
+        }
+    | DOUBLE 
+        { 
+            $type = "double";
+            $code = "\tPUSHF "+ $DOUBLE.text+"\n"; 
+        }
+    | IDENTIFIANT 
+        { 
+            $code = "";
+            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+
+            if(vi.type.equals("int"))
+            {
+                $type = "int";
+                $code += "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
+            }
+            
+            if(vi.type.equals("double"))
+            {
+                $type = "double";
+                $code += "\tPUSHG " + (tablesSymboles.getVar($IDENTIFIANT.text).address) + "\n";
+                $code += "\tPUSHG " + (tablesSymboles.getVar($IDENTIFIANT.text).address+1) + "\n";
+            }
+        }
     ;
 
 decl returns [ String code ]
-    : TYPE IDENTIFIANT finInstruction
+    : TYPE IDENTIFIANT
         {
-            tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
-            $code = "\tPUSHI 0\n";
+            if($TYPE.text.equals("int")) {
+                tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
+                $code = "\tPUSHI 0\n";
+            }
+
+            if($TYPE.text.equals("double")) {
+                tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
+                $code = "\tPUSHF 0.\n";
+            }
         }
-    | TYPE IDENTIFIANT '=' expression finInstruction
+    | TYPE IDENTIFIANT '=' expression
         {
             tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
             $code = $expression.code;
         }
     ;
 
-assignation returns [ String code ] 
+assignation returns [ String code ]
     : IDENTIFIANT '=' expression
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
             $code = $expression.code;
+
+            if(vi.type.equals("double"))
+                $code += "\tSTOREG " + (vi.address+1) + "\n";
+            
             $code += "\tSTOREG " + vi.address + "\n";
         }
     | IDENTIFIANT op=('+'|'-'|'*'|'/') '=' expression
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
-            $code = "\tPUSHG " + vi.address + "\n";
+
+            $code = "\tPUSHG " + (vi.address) + "\n";
+            
+            if($expression.type.equals("double"))
+                $code += "\tPUSHG " + (vi.address+1) + "\n";
+
             $code += $expression.code;
-            $code += evalOperation($op.text) + "\n";
+            $code += evalOperation($op.text, $expression.type) + "\n";
+
+            if(vi.type.equals("double"))
+                $code += "\tSTOREG " + (vi.address+1) + "\n";
+                
             $code += "\tSTOREG " + vi.address + "\n";
         }
     ;
@@ -91,39 +206,67 @@ ioDeclaration returns [ String code ]
     : 'input' '(' IDENTIFIANT ')' finInstruction
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
-            $code = "\tREAD \n";
-            $code += "\tSTOREG " + vi.address + "\n";
+            if(vi.type.equals("int") || vi.type.equals("bool"))
+            {
+                $code = "\tREAD \n";
+                $code += "\tSTOREG " + vi.address + "\n";
+            }
+            
+            if(vi.type.equals("double"))
+            {
+                $code = "\tREADF \n";
+                $code += "\tSTOREG " + (vi.address+1) + "\n";
+                $code += "\tSTOREG " + vi.address + "\n";
+            }
         }
     | 'print' '(' expression ')' finInstruction
         {
             $code = $expression.code;
-            $code += "\tWRITE \n";
+            if($expression.type.equals("int") || $expression.type.equals("bool"))
+                $code += "\tWRITE \n";
+            else
+            {
+                $code += "\tWRITEF \n";
+                $code += "\tPOP \n";
+            }
+                
             $code += "\tPOP \n";
         }
     ;
 
-bloc returns [ String code ]  @init{ $code = new String(); } 
-    : '{'
+bloc returns [ String code ]
+    : (WS | NEWLINE)* '{' (WS | NEWLINE)* { $code = ""; }
         (instruction { $code += $instruction.code; })*  
-      '}'  
-      NEWLINE*
-    | instruction { $code += $instruction.code; }
+        (WS | NEWLINE)*
+      '}' (WS | NEWLINE)*
+    | instruction { $code = $instruction.code; }
     ;
 
 condition returns [String code]
-    : 'true'  { $code = "\tPUSHI 1\n"; }
-    | 'false' { $code = "\tPUSHI 0\n"; }
+    : 'false' { $code = "\tPUSHI 0\n"; }
+    | 'true'  { $code = "\tPUSHI 1\n"; }
     | left=expression op=('=='|'!='|'<'|'<='|'>'|'>=') right=expression
         {
-            $code = $left.code + $right.code;
-            switch ($op.text) {
-                case "==": $code += "\tEQUAL\n"; break;
-                case "!=": $code += "\tNEQ\n"; break;
-                case "<": $code += "\tINF\n"; break;
-                case "<=": $code += "\tINFEQ\n"; break;
-                case ">": $code += "\tSUP\n"; break;
-                case ">=": $code += "\tSUPEQ\n"; break;
+            String type;
+            if($left.type.equals("int") && $right.type.equals("int"))
+            {
+                type = "int";
+                $code = $left.code + $right.code;
             }
+            else
+            {
+                type = "double";
+
+                $code = $left.code;
+                if($left.type.equals("int"))
+                    $code += "\tITOF\n";
+                
+                $code += $left.code;
+                if($right.type.equals("int"))
+                    $code += "\tITOF\n";
+            }
+            
+            $code += evalOperation($op.text, type) + "\n";
         }
     ;
 
@@ -174,12 +317,12 @@ boucle returns [ String code ]
         }
     ;
 
-conditionIf returns [ String code ] @init{ $code = new String(); } 
+conditionIf returns [ String code ]
     : 'if' '(' expressionLogique ')' bloc1=bloc 'else' bloc2=bloc
         {
             String labelFinIf = getNewLabel();
             String labelFinElse = getNewLabel();
-            $code += $expressionLogique.code;
+            $code = $expressionLogique.code;
             $code += "\tJUMPF " + labelFinIf + "\n";
             $code += $bloc1.code;
             $code += "\tJUMP " + labelFinElse + "\n";
@@ -190,7 +333,7 @@ conditionIf returns [ String code ] @init{ $code = new String(); }
     | 'if' '(' expressionLogique ')' bloc
         {
             String labelFin = getNewLabel();
-            $code += $expressionLogique.code;
+            $code = $expressionLogique.code;
             $code += "\tJUMPF " + labelFin + "\n";
             $code += $bloc.code;
             $code += "LABEL " + labelFin + "\n";
@@ -198,7 +341,7 @@ conditionIf returns [ String code ] @init{ $code = new String(); }
     ;
 
 // lexer
-TYPE : 'int' | 'double' ;
+TYPE : 'int' | 'double' | 'bool' ;
 
 IDENTIFIANT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9')* ;
 
@@ -210,6 +353,10 @@ NEWLINE : '\r'? '\n';
 WS :   (' '|'\t')+ -> skip  ;
 
 ENTIER : ('0'..'9')+  ;
+
+DOUBLE : ('0'..'9')+ '.' ('0'..'9')* ;
+
+BOOLEEN : 'true' | 'false' ;
 
 UNMATCH : . -> skip ;
 

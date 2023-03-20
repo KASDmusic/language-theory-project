@@ -11,6 +11,8 @@ Réalisations :
 	- Réalisation des parties A à J du TP Calculatrice (un peu de retard
 	   à cause du temps de développement de l'environnement).
 
+	- Réalisations des autres améliorations : "Supporter plusieurs types", "Cast explicite", "Cast Implicite".
+
 Notes :
 	- Ne pas utiliser le .jar de MVàP source mais celui situé dans
 	   le dossier lib, car dans celui source, dans le fichier Manifest,

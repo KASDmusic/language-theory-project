@@ -379,7 +379,7 @@ function unitTest {
 	grammarPath=${1%/*}
 	echo $grammarPath
 	
-	bash unit/AutoCor.sh $1 $grammarPath/*
+	LANG=fr_FR.ASCII bash unit/AutoCor.sh $1 $grammarPath/*
 	
 }
 
