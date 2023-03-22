@@ -125,7 +125,7 @@ expression returns [ String code, String type ]
     | ENTIER 
         { 
             $type = "int";
-            $code = "\tPUSHI "+ $ENTIER.text+"\n"; 
+            $code = "\tPUSHI "+ $ENTIER.text + "\n"; 
         }
     | DOUBLE 
         { 
@@ -140,6 +140,12 @@ expression returns [ String code, String type ]
             if(vi.type.equals("int"))
             {
                 $type = "int";
+                $code += "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
+            }
+
+            if(vi.type.equals("bool"))
+            {
+                $type = "bool";
                 $code += "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
             }
             
@@ -164,11 +170,21 @@ decl returns [ String code ]
                 tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
                 $code = "\tPUSHF 0.\n";
             }
+
+            if($TYPE.text.equals("bool")) {
+                tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
+                $code = "\tPUSHI 0\n";
+            }
         }
     | TYPE IDENTIFIANT '=' expression
         {
             tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
             $code = $expression.code;
+        }
+    | TYPE IDENTIFIANT '=' expressionLogique
+        {
+            tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
+            $code = $expressionLogique.code;
         }
     ;
 
@@ -181,6 +197,12 @@ assignation returns [ String code ]
             if(vi.type.equals("double"))
                 $code += "\tSTOREG " + (vi.address+1) + "\n";
             
+            $code += "\tSTOREG " + vi.address + "\n";
+        }
+    | IDENTIFIANT '=' expressionLogique
+        {
+            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+            $code = $expressionLogique.code;
             $code += "\tSTOREG " + vi.address + "\n";
         }
     | IDENTIFIANT op=('+'|'-'|'*'|'/') '=' expression
@@ -232,6 +254,12 @@ ioDeclaration returns [ String code ]
                 
             $code += "\tPOP \n";
         }
+    | 'print' '(' expressionLogique ')' finInstruction
+        {
+            $code = $expressionLogique.code;
+            $code += "\tWRITE \n";
+            $code += "\tPOP \n";
+        }
     ;
 
 bloc returns [ String code ]
@@ -243,8 +271,13 @@ bloc returns [ String code ]
     ;
 
 condition returns [String code]
-    : 'false' { $code = "\tPUSHI 0\n"; }
-    | 'true'  { $code = "\tPUSHI 1\n"; }
+    : '!' condition 
+        { 
+            $code = $condition.code;
+            $code += "\tPUSHI 1\n";
+            $code += "\tSUB\n";
+        }
+    | '(' condition ')' { $code = $condition.code; }
     | left=expression op=('=='|'!='|'<'|'<='|'>'|'>=') right=expression
         {
             String type;
@@ -268,16 +301,19 @@ condition returns [String code]
             
             $code += evalOperation($op.text, type) + "\n";
         }
+    | IDENTIFIANT { $code = "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; }
+    | 'false' { $code = "\tPUSHI 0\n"; }
+    | 'true'  { $code = "\tPUSHI 1\n"; }
     ;
 
 expressionLogique returns [ String code ]
-    : condition { $code = $condition.code; }
-    | '!' expressionLogique 
+    : '!' expressionLogique 
         {
             $code = $expressionLogique.code;
             $code += "\tPUSHI 1\n";
             $code += "\tSUB\n";
         }
+    | '(' expressionLogique ')' { $code = $expressionLogique.code; }
     | expressionLogique1=expressionLogique '&&' expressionLogique2=expressionLogique
         {
             $code = $expressionLogique1.code + $expressionLogique2.code;
@@ -288,6 +324,7 @@ expressionLogique returns [ String code ]
             $code = $expressionLogique1.code + $expressionLogique2.code;
             $code += "\tADD\n";
         }
+    | condition { $code = $condition.code; }
     ;
 
 boucle returns [ String code ]

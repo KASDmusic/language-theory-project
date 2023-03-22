@@ -1,0 +1,28 @@
+bool v = true;
+bool f = false;
+
+int a = 1;
+int b = 2;
+
+double d = 2.5;
+double e = 1;
+double f = 1.;
+
+
+print(v);
+print(f);
+
+print(v && f);
+print(v || f);
+
+print(a == b);
+print(a != b);
+
+print(a+1);
+
+print(d);
+print(e);
+print(f);
+
+print(d+e);
+
