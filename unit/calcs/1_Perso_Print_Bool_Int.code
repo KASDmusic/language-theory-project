@@ -4,9 +4,9 @@ bool f = false;
 int a = 1;
 int b = 2;
 
-double d = 2.5;
-double e = 1;
-double f = 1.;
+double d1 = 2.5;
+double d2 = 1;
+double d3 = 1.;
 
 
 print(v);
@@ -20,9 +20,9 @@ print(a != b);
 
 print(a+1);
 
-print(d);
-print(e);
-print(f);
+print(d1);
+print(d2);
+print(d3);
 
-print(d+e);
+print(d1+d2);
 

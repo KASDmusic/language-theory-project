@@ -60,7 +60,17 @@ instruction returns [ String code ]
     ;
 
 expression returns [ String code, String type ]
-    : '-' expression 
+    : '(' TYPE ')' expression 
+        { 
+            $type = $TYPE.text;
+            $code = $expression.code;
+
+                if(($TYPE.text.equals("int") || $TYPE.text.equals("bool")) && $expression.type.equals("double"))
+                    $code += "\tFTOI\n";
+                if($TYPE.text.equals("double") && ($expression.type.equals("int") || $expression.type.equals("bool")))
+                    $code += "\tITOF\n";
+        }
+    |'-' expression 
         { 
             $code = $expression.code;
             
@@ -88,12 +98,14 @@ expression returns [ String code, String type ]
             else
             {
                 $type = "double";
-                if($left.type.equals("int"))
+                if($left.type.equals("int") || $left.type.equals("bool"))
                 {
+                    System.err.println("Warning : conversion " + $left.type + " -> double");
                     $code = $left.code + "\tITOF\n" + $right.code;
                 }
                 else
                 {
+                    System.err.println("Warning : conversion " + $right.type + " -> double");
                     $code = $left.code + $right.code + "\tITOF\n";
                 }   
             }  
@@ -110,12 +122,14 @@ expression returns [ String code, String type ]
             else
             {
                 $type = "double";
-                if($left.type.equals("int"))
+                if($left.type.equals("int")  || $left.type.equals("bool"))
                 {
+                    System.err.println("Warning : conversion " + $left.type + " -> double");
                     $code = $left.code + "\tITOF\n" + $right.code;
                 }
                 else
                 {
+                    System.err.println("Warning : conversion " + $right.type + " -> double");
                     $code = $left.code + $right.code + "\tITOF\n";
                 }   
             }  
@@ -180,11 +194,27 @@ decl returns [ String code ]
         {
             tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
             $code = $expression.code;
+
+            if(!$TYPE.text.equals($expression.type))
+            {
+                System.err.println("Warning : conversion " + $expression.type + " -> " + $TYPE.text);
+                if($TYPE.text.equals("int") && $expression.type.equals("double"))
+                    $code += "\tFTOI\n";
+                else
+                    $code += "\tITOF\n";
+            }
         }
     | TYPE IDENTIFIANT '=' expressionLogique
         {
             tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
             $code = $expressionLogique.code;
+
+            if(!$TYPE.text.equals("bool"))
+            {
+                System.err.println("Warning : conversion bool -> " + $TYPE.text);
+                if($TYPE.text.equals("double"))
+                    $code += "\tITOF\n";
+            }
         }
     ;
 
@@ -193,6 +223,15 @@ assignation returns [ String code ]
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
             $code = $expression.code;
+
+            if(!vi.type.equals($expression.type))
+            {
+                System.err.println("Warning : conversion " + $expression.type + " -> " + vi.type);
+                if(vi.type.equals("int") && $expression.type.equals("double"))
+                    $code += "\tFTOI\n";
+                else
+                    $code += "\tITOF\n";
+            }
 
             if(vi.type.equals("double"))
                 $code += "\tSTOREG " + (vi.address+1) + "\n";
@@ -203,6 +242,14 @@ assignation returns [ String code ]
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
             $code = $expressionLogique.code;
+
+            if(!vi.type.equals("bool"))
+            {
+                System.err.println("Warning : conversion bool -> " + vi.type);
+                if(vi.type.equals("double"))
+                    $code += "\tITOF\n";
+            }
+
             $code += "\tSTOREG " + vi.address + "\n";
         }
     | IDENTIFIANT op=('+'|'-'|'*'|'/') '=' expression
@@ -211,11 +258,21 @@ assignation returns [ String code ]
 
             $code = "\tPUSHG " + (vi.address) + "\n";
             
-            if($expression.type.equals("double"))
+            if(vi.type.equals("double"))
                 $code += "\tPUSHG " + (vi.address+1) + "\n";
 
             $code += $expression.code;
-            $code += evalOperation($op.text, $expression.type) + "\n";
+
+            if(!vi.type.equals($expression.type))
+            {
+                System.err.println("Warning : conversion " + $expression.type + " -> " + vi.type);
+                if(vi.type.equals("int") && $expression.type.equals("double"))
+                    $code += "\tFTOI\n";
+                else
+                    $code += "\tITOF\n";
+            }
+
+            $code += evalOperation($op.text, vi.type) + "\n";
 
             if(vi.type.equals("double"))
                 $code += "\tSTOREG " + (vi.address+1) + "\n";
@@ -383,7 +440,7 @@ TYPE : 'int' | 'double' | 'bool' ;
 IDENTIFIANT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9')* ;
 
 //Commentaires mono-ligne avec '%' et multi-ligne avec '/*' et '*/'
-COMMENT : ('/*'.*?'*/'|'%'.*?'\n') -> skip ;
+COMMENT : ('/*'.*?'*/'|('%'|'#').*?'\n') -> skip ;
 
 NEWLINE : '\r'? '\n';
 
