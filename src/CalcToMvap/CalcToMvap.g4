@@ -42,9 +42,13 @@ calcul returns [ String code ]
     : (decl { $code += $decl.code; } finInstruction)*
       NEWLINE*
       {
-        $code += "\tJUMP " + "Start" + "\n";
-        $code += "LABEL Start" + "\n";
+        $code += "\tJUMP " + "Main" + "\n";
       }
+
+      (fonction { $code += $fonction.code; })*
+      NEWLINE*
+
+      { $code += "LABEL Main" + "\n"; }
 
       (instruction { $code += $instruction.code; })*
 
@@ -56,6 +60,24 @@ instruction returns [ String code ]
     | boucle { $code = $boucle.code; }
     | conditionIf { $code = $conditionIf.code; }
     | assignation finInstruction { $code = $assignation.code; }
+    | RETURN expression finInstruction 
+        { 
+            VariableInfo vi = tablesSymboles.getReturn();
+            $code = $expression.code;
+
+            if((vi.type.equals("int") || vi.type.equals("bool")) && $expression.type.equals("double"))
+                $code += "\tFTOI\n";
+            
+            if(vi.type.equals("double") && ($expression.type.equals("int") || $expression.type.equals("bool")))
+                $code += "\tITOF\n";
+
+            if(vi.type.equals("double"))
+                $code += "\tSTOREL " + (vi.address+1) + "\n";
+
+            $code += "\tSTOREL " + vi.address + "\n";
+
+            $code += "\tRETURN\n";
+        }
     | expression finInstruction { $code = $expression.code; }
     ;
 
@@ -136,6 +158,25 @@ expression returns [ String code, String type ]
 
             $code += evalOperation($op.text, $type) + "\n"; 
         }
+    | IDENTIFIANT '(' args ')'
+        {
+            $type = tablesSymboles.getFunction($IDENTIFIANT.text);
+            
+            if($type.equals("int") || $type.equals("bool"))
+                $code = "\tPUSHI 0\n";
+            else if($type.equals("double"))
+                $code = "\tPUSHF 0.\n";
+            else
+                $code = "";
+
+            $code += $args.code;
+            $code += "\tCALL " + $IDENTIFIANT.text + "\n";
+
+            for(int i = 0; i < $args.size; i++)
+            {
+                $code += "\tPOP\n";
+            }
+        }
     | ENTIER 
         { 
             $type = "int";
@@ -147,29 +188,99 @@ expression returns [ String code, String type ]
             $code = "\tPUSHF "+ $DOUBLE.text+"\n"; 
         }
     | IDENTIFIANT 
-        { 
-            $code = "";
+        {
+            String command;
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
+
+            $type = vi.type;
+            
+            if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+            {
+                command = "\tPUSHL ";
+            }
+            else
+            {
+                command = "\tPUSHG ";
+            }
 
             if(vi.type.equals("int"))
             {
-                $type = "int";
-                $code += "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
+                $code = command + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
             }
 
             if(vi.type.equals("bool"))
             {
-                $type = "bool";
-                $code += "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
+                $code = command + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
             }
             
             if(vi.type.equals("double"))
             {
-                $type = "double";
-                $code += "\tPUSHG " + (tablesSymboles.getVar($IDENTIFIANT.text).address) + "\n";
-                $code += "\tPUSHG " + (tablesSymboles.getVar($IDENTIFIANT.text).address+1) + "\n";
+                $code = command + (tablesSymboles.getVar($IDENTIFIANT.text).address) + "\n";
+                $code += command + (tablesSymboles.getVar($IDENTIFIANT.text).address+1) + "\n";
             }
+            
         }
+    ;
+
+// init nécessaire à cause du ? final et donc args peut être vide (mais $args sera non null) 
+args returns [ String code, int size] @init{ $code = new String(); $size = 0; }
+    : ( expression
+    {
+        // code java pour première expression pour arg
+        $size++;
+        if($expression.type.equals("double"))
+            $size++;
+
+        $code += $expression.code;
+    }
+    ( ',' expression
+    {
+        // code java pour expression suivante pour arg
+        $size++;
+        if($expression.type.equals("double"))
+            $size++;
+            
+        $code += $expression.code;
+    }
+    )*
+      )?
+    ;
+
+params
+    : (TYPE IDENTIFIANT
+        {
+            // code java gérant une variable locale (arg0)
+            tablesSymboles.addParam($IDENTIFIANT.text, $TYPE.text);
+        }
+        ( ',' TYPE IDENTIFIANT
+            {
+                // code java gérant une variable locale (argi)
+                tablesSymboles.addParam($IDENTIFIANT.text, $TYPE.text);
+            }
+        )*)?
+    ;
+
+fonction returns [ String code ]
+@init { tablesSymboles.enterFunction(); }
+@after { tablesSymboles.exitFunction(); }
+    : type=(TYPE | 'void') IDENTIFIANT 
+        {
+            tablesSymboles.addFunction($IDENTIFIANT.text, $type.text);
+            String label = $IDENTIFIANT.text;
+            $code = "LABEL " + label + "\n";
+	    }
+        '(' params ')' NEWLINE* '{' NEWLINE*
+
+        (decl { $code += $decl.code; } finInstruction)*
+
+        NEWLINE*
+        (instruction { $code += $instruction.code; })*
+
+        '}' 
+
+        { $code +=  "RETURN\n";  /* Return de sécurité */ }
+        
+      NEWLINE*
     ;
 
 decl returns [ String code ]
@@ -233,10 +344,20 @@ assignation returns [ String code ]
                     $code += "\tITOF\n";
             }
 
+            String command;
+            if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+            {
+                command = "\tSTOREL ";
+            }
+            else
+            {
+                command = "\tSTOREG ";
+            }
+
             if(vi.type.equals("double"))
-                $code += "\tSTOREG " + (vi.address+1) + "\n";
+                $code += command + (vi.address+1) + "\n";
             
-            $code += "\tSTOREG " + vi.address + "\n";
+            $code += command + vi.address + "\n";
         }
     | IDENTIFIANT '=' expressionLogique
         {
@@ -250,16 +371,36 @@ assignation returns [ String code ]
                     $code += "\tITOF\n";
             }
 
-            $code += "\tSTOREG " + vi.address + "\n";
+            String command;
+            if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+            {
+                command = "\tSTOREL ";
+            }
+            else
+            {
+                command = "\tSTOREG ";
+            }
+
+            $code += command + vi.address + "\n";
         }
     | IDENTIFIANT op=('+'|'-'|'*'|'/') '=' expression
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
 
-            $code = "\tPUSHG " + (vi.address) + "\n";
+            String pushCommand;
+            if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+            {
+                pushCommand = "\tPUSHL ";
+            }
+            else
+            {
+                pushCommand = "\tPUSHG ";
+            }
+
+            $code = pushCommand + vi.address + "\n";
             
             if(vi.type.equals("double"))
-                $code += "\tPUSHG " + (vi.address+1) + "\n";
+                $code += pushCommand + (vi.address+1) + "\n";
 
             $code += $expression.code;
 
@@ -274,10 +415,20 @@ assignation returns [ String code ]
 
             $code += evalOperation($op.text, vi.type) + "\n";
 
+            String command;
+            if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+            {
+                command = "\tSTOREL ";
+            }
+            else
+            {
+                command = "\tSTOREG ";
+            }
+
             if(vi.type.equals("double"))
-                $code += "\tSTOREG " + (vi.address+1) + "\n";
+                $code += command + (vi.address+1) + "\n";
                 
-            $code += "\tSTOREG " + vi.address + "\n";
+            $code += command + vi.address + "\n";
         }
     ;
 
@@ -287,15 +438,35 @@ ioDeclaration returns [ String code ]
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
             if(vi.type.equals("int") || vi.type.equals("bool"))
             {
+                String command;
+                if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+                {
+                    command = "\tSTOREL ";
+                }
+                else
+                {
+                    command = "\tSTOREG ";
+                }
+
                 $code = "\tREAD \n";
-                $code += "\tSTOREG " + vi.address + "\n";
+                $code += command + vi.address + "\n";
             }
             
             if(vi.type.equals("double"))
             {
+                String command;
+                if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
+                {
+                    command = "\tSTOREL ";
+                }
+                else
+                {
+                    command = "\tSTOREG ";
+                }
+
                 $code = "\tREADF \n";
-                $code += "\tSTOREG " + (vi.address+1) + "\n";
-                $code += "\tSTOREG " + vi.address + "\n";
+                $code += command + (vi.address+1) + "\n";
+                $code += command + vi.address + "\n";
             }
         }
     | 'print' '(' expression ')' finInstruction
@@ -338,7 +509,7 @@ condition returns [String code]
     | left=expression op=('=='|'!='|'<'|'<='|'>'|'>=') right=expression
         {
             String type;
-            if($left.type.equals("int") && $right.type.equals("int"))
+            if($left.type.equals($right.type) && ($right.type.equals("int") || $right.type.equals("bool")))
             {
                 type = "int";
                 $code = $left.code + $right.code;
@@ -351,14 +522,26 @@ condition returns [String code]
                 if($left.type.equals("int"))
                     $code += "\tITOF\n";
                 
-                $code += $left.code;
+                $code += $right.code;
                 if($right.type.equals("int"))
                     $code += "\tITOF\n";
             }
             
             $code += evalOperation($op.text, type) + "\n";
         }
-    | IDENTIFIANT { $code = "\tPUSHG " + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; }
+    | IDENTIFIANT 
+        { 
+            String command;
+            if(tablesSymboles.getVar($IDENTIFIANT.text).scope.equals(VariableInfo.Scope.PARAM) || tablesSymboles.getVar($IDENTIFIANT.text).scope.equals(VariableInfo.Scope.LOCAL))
+            {
+                command = "\tPUSHL ";
+            }
+            else
+            {
+                command = "\tPUSHG ";
+            }
+            $code = command + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
+        }
     | 'false' { $code = "\tPUSHI 0\n"; }
     | 'true'  { $code = "\tPUSHI 1\n"; }
     ;
@@ -435,7 +618,10 @@ conditionIf returns [ String code ]
     ;
 
 // lexer
+
 TYPE : 'int' | 'double' | 'bool' ;
+
+RETURN: 'return' ;
 
 IDENTIFIANT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9')* ;
 
