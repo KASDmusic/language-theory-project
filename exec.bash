@@ -448,3 +448,8 @@ fi
 #compileGrammar dist/grammars/AnBn -d
 #testGrammar dist/class/AnBn/AnBn.g4 anbn -gui
 
+# --------------------------------------------------------------
+
+#bash exec.bash unit test src/CalcToMvap/CalcToMvap.g4
+#bash exec.bash antlr createCompileTest src/CalcToMvap/CalcToMvap.g4 start
+
