@@ -626,7 +626,7 @@ RETURN: 'return' ;
 IDENTIFIANT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9')* ;
 
 //Commentaires mono-ligne avec '%' et multi-ligne avec '/*' et '*/'
-COMMENT : ('/*'.*?'*/'|('%'|'#').*?'\n') -> skip ;
+COMMENT : ('/*'.*?'*/'|('%'|'#'|'//').*?'\n') -> skip ;
 
 NEWLINE : '\r'? '\n';
 
