@@ -38,8 +38,9 @@ start : calcul EOF ;
 calcul returns [ String code ]
 @init{ $code = new String(); }   // On initialise code, pour l'utiliser comme accumulateur 
 @after{ System.out.println($code); } // On affiche l’ensemble du code produit
-
-    : (decl { $code += $decl.code; } finInstruction)*
+    : 
+    { int nbDecl = 0; }
+    (decl { $code += $decl.code; nbDecl++; if($decl.type.equals("double")) nbDecl++; } finInstruction)*
       NEWLINE*
       {
         $code += "\tJUMP " + "Main" + "\n";
@@ -52,7 +53,12 @@ calcul returns [ String code ]
 
       (instruction { $code += $instruction.code; })*
 
-      { $code += "\tHALT\n"; }
+      { 
+        for(int i = 0; i < nbDecl; i++ )
+            $code += "\tPOP\n";
+           
+        $code += "\tHALT\n"; 
+      }
     ;
 
 instruction returns [ String code ]
@@ -288,9 +294,10 @@ fonction returns [ String code ]
       NEWLINE*
     ;
 
-decl returns [ String code ]
+decl returns [ String code, String type ]
     : TYPE IDENTIFIANT
         {
+            $type = $TYPE.text;
             if($TYPE.text.equals("int")) {
                 tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
                 $code = "\tPUSHI 0\n";
@@ -308,6 +315,7 @@ decl returns [ String code ]
         }
     | TYPE IDENTIFIANT '=' expr
         {
+            $type = $TYPE.text;
             tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
             $code = $expr.code;
 
