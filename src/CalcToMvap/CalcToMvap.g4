@@ -60,15 +60,15 @@ instruction returns [ String code ]
     | boucle { $code = $boucle.code; }
     | conditionIf { $code = $conditionIf.code; }
     | assignation finInstruction { $code = $assignation.code; }
-    | RETURN expression finInstruction 
+    | RETURN expr finInstruction 
         { 
             VariableInfo vi = tablesSymboles.getReturn();
-            $code = $expression.code;
+            $code = $expr.code;
 
-            if((vi.type.equals("int") || vi.type.equals("bool")) && $expression.type.equals("double"))
+            if((vi.type.equals("int") || vi.type.equals("bool")) && $expr.type.equals("double"))
                 $code += "\tFTOI\n";
             
-            if(vi.type.equals("double") && ($expression.type.equals("int") || $expression.type.equals("bool")))
+            if(vi.type.equals("double") && ($expr.type.equals("int") || $expr.type.equals("bool")))
                 $code += "\tITOF\n";
 
             if(vi.type.equals("double"))
@@ -78,7 +78,12 @@ instruction returns [ String code ]
 
             $code += "\tRETURN\n";
         }
-    | expression finInstruction { $code = $expression.code; }
+    | expr finInstruction { $code = $expr.code; }
+    ;
+
+expr returns [ String code, String type ]
+    : expression { $code = $expression.code; $type = $expression.type; }
+    | expressionLogique { $code = $expressionLogique.code; $type = "bool"; }
     ;
 
 expression returns [ String code, String type ]
@@ -224,23 +229,23 @@ expression returns [ String code, String type ]
 
 // init nécessaire à cause du ? final et donc args peut être vide (mais $args sera non null) 
 args returns [ String code, int size] @init{ $code = new String(); $size = 0; }
-    : ( expression
+    : ( expr
     {
         // code java pour première expression pour arg
         $size++;
-        if($expression.type.equals("double"))
+        if($expr.type.equals("double"))
             $size++;
 
-        $code += $expression.code;
+        $code += $expr.code;
     }
-    ( ',' expression
+    ( ',' expr
     {
         // code java pour expression suivante pour arg
         $size++;
-        if($expression.type.equals("double"))
+        if($expr.type.equals("double"))
             $size++;
             
-        $code += $expression.code;
+        $code += $expr.code;
     }
     )*
       )?
@@ -301,44 +306,32 @@ decl returns [ String code ]
                 $code = "\tPUSHI 0\n";
             }
         }
-    | TYPE IDENTIFIANT '=' expression
+    | TYPE IDENTIFIANT '=' expr
         {
             tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
-            $code = $expression.code;
+            $code = $expr.code;
 
-            if(!$TYPE.text.equals($expression.type))
+            if(!$TYPE.text.equals($expr.type))
             {
-                System.err.println("Warning : conversion " + $expression.type + " -> " + $TYPE.text);
-                if($TYPE.text.equals("int") && $expression.type.equals("double"))
+                System.err.println("Warning : conversion " + $expr.type + " -> " + $TYPE.text);
+                if($TYPE.text.equals("int") && $expr.type.equals("double"))
                     $code += "\tFTOI\n";
                 else
-                    $code += "\tITOF\n";
-            }
-        }
-    | TYPE IDENTIFIANT '=' expressionLogique
-        {
-            tablesSymboles.addVarDecl($IDENTIFIANT.text, $TYPE.text);
-            $code = $expressionLogique.code;
-
-            if(!$TYPE.text.equals("bool"))
-            {
-                System.err.println("Warning : conversion bool -> " + $TYPE.text);
-                if($TYPE.text.equals("double"))
                     $code += "\tITOF\n";
             }
         }
     ;
 
 assignation returns [ String code ]
-    : IDENTIFIANT '=' expression
+    : IDENTIFIANT '=' expr
         {
             VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
-            $code = $expression.code;
+            $code = $expr.code;
 
-            if(!vi.type.equals($expression.type))
+            if(!vi.type.equals($expr.type))
             {
-                System.err.println("Warning : conversion " + $expression.type + " -> " + vi.type);
-                if(vi.type.equals("int") && $expression.type.equals("double"))
+                System.err.println("Warning : conversion " + $expr.type + " -> " + vi.type);
+                if(vi.type.equals("int") && $expr.type.equals("double"))
                     $code += "\tFTOI\n";
                 else
                     $code += "\tITOF\n";
@@ -357,30 +350,6 @@ assignation returns [ String code ]
             if(vi.type.equals("double"))
                 $code += command + (vi.address+1) + "\n";
             
-            $code += command + vi.address + "\n";
-        }
-    | IDENTIFIANT '=' expressionLogique
-        {
-            VariableInfo vi = tablesSymboles.getVar($IDENTIFIANT.text);
-            $code = $expressionLogique.code;
-
-            if(!vi.type.equals("bool"))
-            {
-                System.err.println("Warning : conversion bool -> " + vi.type);
-                if(vi.type.equals("double"))
-                    $code += "\tITOF\n";
-            }
-
-            String command;
-            if(vi.scope.equals(VariableInfo.Scope.PARAM) || vi.scope.equals(VariableInfo.Scope.LOCAL))
-            {
-                command = "\tSTOREL ";
-            }
-            else
-            {
-                command = "\tSTOREG ";
-            }
-
             $code += command + vi.address + "\n";
         }
     | IDENTIFIANT op=('+'|'-'|'*'|'/') '=' expression
@@ -469,10 +438,10 @@ ioDeclaration returns [ String code ]
                 $code += command + vi.address + "\n";
             }
         }
-    | 'print' '(' expression ')' finInstruction
+    | 'print' '(' expr ')' finInstruction
         {
-            $code = $expression.code;
-            if($expression.type.equals("int") || $expression.type.equals("bool"))
+            $code = $expr.code;
+            if($expr.type.equals("int") || $expr.type.equals("bool"))
                 $code += "\tWRITE \n";
             else
             {
@@ -480,12 +449,6 @@ ioDeclaration returns [ String code ]
                 $code += "\tPOP \n";
             }
                 
-            $code += "\tPOP \n";
-        }
-    | 'print' '(' expressionLogique ')' finInstruction
-        {
-            $code = $expressionLogique.code;
-            $code += "\tWRITE \n";
             $code += "\tPOP \n";
         }
     ;
@@ -529,19 +492,7 @@ condition returns [String code]
             
             $code += evalOperation($op.text, type) + "\n";
         }
-    | IDENTIFIANT 
-        { 
-            String command;
-            if(tablesSymboles.getVar($IDENTIFIANT.text).scope.equals(VariableInfo.Scope.PARAM) || tablesSymboles.getVar($IDENTIFIANT.text).scope.equals(VariableInfo.Scope.LOCAL))
-            {
-                command = "\tPUSHL ";
-            }
-            else
-            {
-                command = "\tPUSHG ";
-            }
-            $code = command + tablesSymboles.getVar($IDENTIFIANT.text).address + "\n"; 
-        }
+    | expression { $code = $expression.code; }
     | 'false' { $code = "\tPUSHI 0\n"; }
     | 'true'  { $code = "\tPUSHI 1\n"; }
     ;
